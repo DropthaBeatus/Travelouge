@@ -12,6 +12,7 @@ import CoreData
 class EntriesTableViewController: UITableViewController {
 
     var trips : Trips?
+    var travelouges = [Travelouge]()
     
     @IBOutlet var entryTableView: UITableView!
     
@@ -19,12 +20,12 @@ class EntriesTableViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.title = "Trips"
-        // Uncomment the following line to preserve selection between presentations
-        // self.clearsSelectionOnViewWillAppear = false
-
-        // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-        // self.navigationItem.rightBarButtonItem = self.editButtonItem
+        self.title = trips?.destination ?? ""
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        updateTravelouge()
+        entryTableView.reloadData()
     }
 
     // MARK: - Table view data source
@@ -36,7 +37,7 @@ class EntriesTableViewController: UITableViewController {
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
-        return (trips?.travelouges?.count)!
+        return travelouges.count
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -45,10 +46,10 @@ class EntriesTableViewController: UITableViewController {
         if let cell = cell as? EntriesTableViewCell {
             let dateformatter = DateFormatter()
             dateformatter.dateStyle = .medium
-            let document = trips?.travelouges?[indexPath.row]
-            cell.nameLabel.text = document?.title
-            
-            if let date = document?.date{
+            let log = travelouges[indexPath.row]
+            cell.nameLabel.text = log.title
+            cell.entryImage.image = log.pic
+            if let date = log.date{
                 cell.dateLabel.text = dateformatter.string(from : date)
             } else{
                 cell.dateLabel.text = "Date was not found"
@@ -73,22 +74,18 @@ class EntriesTableViewController: UITableViewController {
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        guard let destination = segue.destination as? LogViewController else{
-            return
+        if let destination = segue.destination as? LogViewController,
+            let segueIdentifier = segue.identifier {
+                destination.trips = trips
+                if (segueIdentifier == "Push2Info") {
+                    if let row = entryTableView.indexPathForSelectedRow?.row {
+                        destination.travelouge = travelouges[row]
+                    }
+                }
         }
-        //gonna hafta delete travelouge most likely
-        destination.trips = trips
-    }
- /*
-    @IBAction func Create(_ sender: Any) {
-        performSegue(withIdentifier: "Push2", sender: self)
-    }
-    
-*/    override func viewWillAppear(_ animated: Bool){
-        self.entryTableView.reloadData()
         
     }
-    
+
     func deleteDoc(at indexPath: IndexPath){
         guard let entry = trips?.travelouges![indexPath.row],let managedContext = entry.managedObjectContext else{
             return
@@ -97,7 +94,7 @@ class EntriesTableViewController: UITableViewController {
         
         do{
             try managedContext.save()
-            
+            self.travelouges.remove(at: indexPath.row)
             entryTableView.deleteRows(at: [indexPath], with: .automatic)
         } catch{
             print("Can't delete")
@@ -112,6 +109,10 @@ class EntriesTableViewController: UITableViewController {
         if editingStyle == .delete{
             deleteDoc(at: indexPath)
         }
+    }
+    
+    func updateTravelouge(){
+        travelouges = trips?.travelouges ?? [Travelouge]()
     }
 
 

@@ -23,8 +23,17 @@ public class Travelouge: NSManagedObject {
         }
     }
     
+    var pic : UIImage?{
+        get{
+            return UIImage(data: rawData! as Data)
+        }
+        set{
+            rawData = NSData( data : newValue!.pngData()!)
+        }
+    }
+    
     //need to convert UIimage to raw data
-    convenience init?(title: String?, textContent: String?, image : UIImage, fuaxDate : Date){
+    convenience init?(title: String?, textContent: String?, image : UIImage, fuaxDate : Date, trip : Trips){
         let appDelegate = UIApplication.shared.delegate as? AppDelegate
         guard let managedContext = appDelegate?.persistentContainer.viewContext,
             let title = title, title != "" else {
@@ -33,15 +42,17 @@ public class Travelouge: NSManagedObject {
         self.init(entity: Travelouge.entity(), insertInto: managedContext)
         self.title = title
         self.textContent = textContent
+        self.trip = trip
         date = fuaxDate
-        
+        pic = image
     }
     
-    func update(title: String?, textContent: String?, image : UIImage, fuaxDate : Date){
+    func update(title: String?, textContent: String?, image : UIImage, fuaxDate : Date, trip : Trips){
         self.title = title
         self.textContent = textContent
         date = fuaxDate
-        
+        pic = image
+        self.trip = trip
     }
     
 }
